@@ -1,0 +1,27 @@
+.form {
+	display: grid;
+	gap: 12px;
+	margin-top: 12px;
+}
+
+.grid {
+	display: grid;
+	gap: 10px;
+}
+
+.ok {
+	border: 1px solid rgba(10, 122, 53, 0.22);
+	background: rgba(10, 122, 53, 0.06);
+	padding: 10px 12px;
+	border-radius: 14px;
+	font-weight: 800;
+}
+
+.err {
+	border: 1px solid rgba(155, 28, 28, 0.2);
+	background: rgba(155, 28, 28, 0.06);
+	padding: 10px 12px;
+	border-radius: 14px;
+	font-weight: 800;
+	color: #9b1c1c;
+}
