@@ -1,8 +1,10 @@
 'use client';
 
+import { ADMIN_LOGIN_PATH } from '@/lib/auth/admin-path';
 import { supabaseBrowser } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import s from '../../admin.module.css';
 
 type Category = {
 	id: string;
@@ -133,18 +135,18 @@ export default function AdminProductsClient() {
 
 	async function uploadImage(
 		productId: string,
-		file: File,
+		nextFile: File,
 		titleForFile: string,
 	) {
-		const ext = file.name.split('.').pop() || 'jpg';
+		const ext = nextFile.name.split('.').pop() || 'jpg';
 		const safe = slugifyFileName(titleForFile || 'product');
 		const path = `${productId}/${safe}.${ext}`;
 
 		const up = await supabase.storage
 			.from('product-images')
-			.upload(path, file, {
+			.upload(path, nextFile, {
 				upsert: true,
-				contentType: file.type || 'image/jpeg',
+				contentType: nextFile.type || 'image/jpeg',
 			});
 
 		if (up.error) throw new Error(up.error.message);
@@ -170,8 +172,9 @@ export default function AdminProductsClient() {
 		setOk(null);
 
 		const priceUah = Number(price);
+
 		if (!Number.isFinite(priceUah) || priceUah < 0) {
-			setErr('Цена должна быть числом >= 0');
+			setErr('Цена должна быть числом больше или равна нулю');
 			return;
 		}
 		if (!categoryId) {
@@ -249,7 +252,7 @@ export default function AdminProductsClient() {
 				throw new Error('Название не может быть пустым');
 			}
 			if (!Number.isFinite(nextPrice) || nextPrice < 0) {
-				throw new Error('Цена должна быть числом >= 0');
+				throw new Error('Цена должна быть числом больше или равна нулю');
 			}
 			if (!draft.category_id) {
 				throw new Error('Выбери категорию');
@@ -404,325 +407,310 @@ export default function AdminProductsClient() {
 
 	async function logout() {
 		await supabase.auth.signOut();
-		router.replace('/admin/login');
+		router.replace(ADMIN_LOGIN_PATH);
 		router.refresh();
 	}
 
 	return (
-		<div style={{ display: 'grid', gap: 16 }}>
-			<div
-				style={{
-					display: 'flex',
-					gap: 10,
-					alignItems: 'center',
-					flexWrap: 'wrap',
-				}}
-			>
-				<button onClick={load} disabled={loading}>
-					Обновить
-				</button>
-				<button onClick={logout}>Выйти</button>
-				{loading ? <span style={{ opacity: 0.7 }}>Загрузка…</span> : null}
-			</div>
+		<div className={s.grid}>
+			<section className={`${s.card} ${s.cardPad}`}>
+				<div className={s.toolbar}>
+					<div>
+						<h2 className={s.cardTitle}>Управление каталогом</h2>
+						<p className={s.cardText}>
+							Добавляй новые позиции, меняй существующие и обновляй изображения.
+						</p>
+					</div>
 
-			<form
-				onSubmit={addProduct}
-				style={{
-					border: '1px solid #d9e7ef',
-					borderRadius: 18,
-					padding: 16,
-					display: 'grid',
-					gap: 10,
-					maxWidth: 840,
-					background: '#fff',
-				}}
-			>
-				<h2 style={{ margin: 0 }}>Добавить товар</h2>
-
-				<div style={{ display: 'grid', gap: 6 }}>
-					<label>Категория</label>
-					<select
-						value={categoryId}
-						onChange={e => setCategoryId(e.target.value)}
-					>
-						{cats.map(c => (
-							<option key={c.id} value={c.id}>
-								{c.name} ({c.slug})
-							</option>
-						))}
-					</select>
+					<div className={s.toolbarActions}>
+						<button className={s.btn} onClick={load} disabled={loading}>
+							{loading ? 'Загрузка…' : 'Обновить'}
+						</button>
+						<button className={`${s.btn} ${s.btnDanger}`} onClick={logout}>
+							Выйти
+						</button>
+					</div>
 				</div>
+			</section>
 
-				<div style={{ display: 'grid', gap: 6 }}>
-					<label>Название</label>
-					<input
-						value={title}
-						onChange={e => setTitle(e.target.value)}
-						required
-						placeholder='Напр. Euphyllia Torch Gold'
-					/>
-				</div>
+			<section className={s.twoCols}>
+				<form
+					onSubmit={addProduct}
+					className={`${s.card} ${s.cardPad} ${s.grid}`}
+				>
+					<div>
+						<h2 className={s.cardTitle}>Добавить товар</h2>
+						<p className={s.cardText}>
+							Заполни основные поля, прикрепи фото и товар сразу появится в
+							каталоге.
+						</p>
+					</div>
 
-				<div style={{ display: 'grid', gap: 6 }}>
-					<label>Цена (₴)</label>
-					<input
-						value={price}
-						onChange={e => setPrice(e.target.value)}
-						inputMode='numeric'
-					/>
-				</div>
+					<div>
+						<label className={s.label}>Категория</label>
+						<select
+							className={s.select}
+							value={categoryId}
+							onChange={e => setCategoryId(e.target.value)}
+						>
+							{cats.map(c => (
+								<option key={c.id} value={c.id}>
+									{c.name} ({c.slug})
+								</option>
+							))}
+						</select>
+					</div>
 
-				<label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-					<input
-						type='checkbox'
-						checked={inStock}
-						onChange={e => setInStock(e.target.checked)}
-					/>
-					В наличии
-				</label>
+					<div>
+						<label className={s.label}>Название</label>
+						<input
+							className={s.input}
+							value={title}
+							onChange={e => setTitle(e.target.value)}
+							required
+							placeholder='Напр. Euphyllia Torch Gold'
+						/>
+					</div>
 
-				<div style={{ display: 'grid', gap: 6 }}>
-					<label>Описание</label>
-					<textarea
-						value={desc}
-						onChange={e => setDesc(e.target.value)}
-						placeholder='Размер, оттенок, условия содержания...'
-						rows={4}
-					/>
-				</div>
+					<div>
+						<label className={s.label}>Цена (₴)</label>
+						<input
+							className={s.input}
+							value={price}
+							onChange={e => setPrice(e.target.value)}
+							inputMode='numeric'
+						/>
+					</div>
 
-				<div style={{ display: 'grid', gap: 6 }}>
-					<label>Теги</label>
-					<input
-						value={tags}
-						onChange={e => setTags(e.target.value)}
-						placeholder='lps, torch, premium'
-					/>
-				</div>
+					<label className={s.checkboxRow}>
+						<input
+							className={s.checkbox}
+							type='checkbox'
+							checked={inStock}
+							onChange={e => setInStock(e.target.checked)}
+						/>
+						В наличии
+					</label>
 
-				<div style={{ display: 'grid', gap: 6 }}>
-					<label>Фото</label>
-					<input
-						type='file'
-						accept='image/*'
-						onChange={e => setFile(e.target.files?.[0] ?? null)}
-					/>
-				</div>
+					<div>
+						<label className={s.label}>Описание</label>
+						<textarea
+							className={s.textarea}
+							value={desc}
+							onChange={e => setDesc(e.target.value)}
+							placeholder='Размер, оттенок, условия содержания...'
+						/>
+					</div>
 
-				<button type='submit'>Добавить товар</button>
+					<div>
+						<label className={s.label}>Теги</label>
+						<input
+							className={s.input}
+							value={tags}
+							onChange={e => setTags(e.target.value)}
+							placeholder='lps, torch, premium'
+						/>
+					</div>
 
-				{ok ? <div style={{ color: 'green' }}>✅ {ok}</div> : null}
-				{err ? <div style={{ color: 'crimson' }}>❌ {err}</div> : null}
-			</form>
+					<div>
+						<label className={s.label}>Фото</label>
+						<input
+							className={s.input}
+							type='file'
+							accept='image/*'
+							onChange={e => setFile(e.target.files?.[0] ?? null)}
+						/>
+						<p className={s.note}>
+							Лучше вертикальное или квадратное фото хорошего качества.
+						</p>
+					</div>
 
-			<div
-				style={{
-					border: '1px solid #d9e7ef',
-					borderRadius: 18,
-					padding: 16,
-					background: '#fff',
-				}}
-			>
-				<h2 style={{ marginTop: 0 }}>Список товаров ({items.length})</h2>
+					<button type='submit' className={`${s.btn} ${s.btnPrimary}`}>
+						Добавить товар
+					</button>
 
-				<div style={{ display: 'grid', gap: 14 }}>
-					{items.map(p => {
-						const draft = drafts[p.id];
-						if (!draft) return null;
+					{ok ? <div className={s.statusOk}>✅ {ok}</div> : null}
+					{err ? <div className={s.statusErr}>❌ {err}</div> : null}
+				</form>
 
-						return (
-							<div
-								key={p.id}
-								style={{
-									border: '1px solid #e7eef3',
-									borderRadius: 16,
-									padding: 14,
-									display: 'grid',
-									gap: 12,
-								}}
-							>
-								<div
-									style={{
-										display: 'flex',
-										justifyContent: 'space-between',
-										gap: 12,
-										alignItems: 'center',
-										flexWrap: 'wrap',
-									}}
-								>
-									<div>
-										<div style={{ fontWeight: 700 }}>{p.title}</div>
-										<div style={{ fontSize: 12, opacity: 0.7 }}>{p.id}</div>
-									</div>
+				<section className={`${s.card} ${s.cardPad} ${s.grid}`}>
+					<div>
+						<h2 className={s.cardTitle}>Список товаров</h2>
+						<p className={s.cardText}>
+							Сейчас в каталоге: <strong>{items.length}</strong>
+						</p>
+					</div>
 
-									<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-										<a href={`/p/${p.id}`} target='_blank' rel='noreferrer'>
-											Открыть товар
-										</a>
+					<div className={s.productList}>
+						{items.length ? (
+							items.map(p => {
+								const draft = drafts[p.id];
+								if (!draft) return null;
 
-										<button
-											type='button'
-											onClick={() => saveProduct(p.id)}
-											disabled={savingId === p.id}
-										>
-											{savingId === p.id ? 'Сохраняю…' : 'Сохранить'}
-										</button>
+								return (
+									<article key={p.id} className={s.productCard}>
+										<div className={s.productHead}>
+											<div className={s.productMeta}>
+												<h3 className={s.productTitle}>{p.title}</h3>
+												<div className={s.productId}>{p.id}</div>
+											</div>
 
-										<button
-											type='button'
-											onClick={() => removeProduct(p.id)}
-											style={{ color: 'crimson' }}
-										>
-											Удалить
-										</button>
-									</div>
-								</div>
+											<div className={s.productActions}>
+												<a
+													href={`/p/${p.id}`}
+													target='_blank'
+													rel='noreferrer'
+													className={s.btn}
+												>
+													Открыть
+												</a>
 
-								<div
-									style={{
-										display: 'grid',
-										gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-										gap: 12,
-									}}
-								>
-									<div style={{ display: 'grid', gap: 6 }}>
-										<label>Название</label>
-										<input
-											value={draft.title}
-											onChange={e => setDraft(p.id, { title: e.target.value })}
-										/>
-									</div>
+												<button
+													type='button'
+													className={`${s.btn} ${s.btnPrimary}`}
+													onClick={() => saveProduct(p.id)}
+													disabled={savingId === p.id}
+												>
+													{savingId === p.id ? 'Сохраняю…' : 'Сохранить'}
+												</button>
 
-									<div style={{ display: 'grid', gap: 6 }}>
-										<label>Цена</label>
-										<input
-											value={draft.price_uah}
-											inputMode='numeric'
-											onChange={e =>
-												setDraft(p.id, { price_uah: e.target.value })
-											}
-										/>
-									</div>
+												<button
+													type='button'
+													className={`${s.btn} ${s.btnDanger}`}
+													onClick={() => removeProduct(p.id)}
+												>
+													Удалить
+												</button>
+											</div>
+										</div>
 
-									<div style={{ display: 'grid', gap: 6 }}>
-										<label>Категория</label>
-										<select
-											value={draft.category_id}
-											onChange={e =>
-												setDraft(p.id, { category_id: e.target.value })
-											}
-										>
-											{cats.map(c => (
-												<option key={c.id} value={c.id}>
-													{c.name} ({c.slug})
-												</option>
-											))}
-										</select>
-									</div>
-
-									<label
-										style={{ display: 'flex', gap: 8, alignItems: 'center' }}
-									>
-										<input
-											type='checkbox'
-											checked={draft.in_stock}
-											onChange={e =>
-												setDraft(p.id, { in_stock: e.target.checked })
-											}
-										/>
-										В наличии
-									</label>
-								</div>
-
-								<div style={{ display: 'grid', gap: 6 }}>
-									<label>Описание</label>
-									<textarea
-										rows={4}
-										value={draft.description}
-										onChange={e =>
-											setDraft(p.id, { description: e.target.value })
-										}
-									/>
-								</div>
-
-								<div style={{ display: 'grid', gap: 6 }}>
-									<label>Теги</label>
-									<input
-										value={draft.tags}
-										onChange={e => setDraft(p.id, { tags: e.target.value })}
-									/>
-								</div>
-
-								<div
-									style={{
-										display: 'grid',
-										gridTemplateColumns: '180px 1fr',
-										gap: 12,
-										alignItems: 'start',
-									}}
-								>
-									<div>
-										<div
-											style={{
-												width: 180,
-												height: 180,
-												borderRadius: 14,
-												overflow: 'hidden',
-												background: '#f2f8fb',
-												border: '1px solid #dbe8ef',
-											}}
-										>
-											{p.image_url ? (
-												<img
-													src={p.image_url}
-													alt={p.title}
-													style={{
-														width: '100%',
-														height: '100%',
-														objectFit: 'cover',
-														display: 'block',
-													}}
+										<div className={s.formGrid}>
+											<div>
+												<label className={s.label}>Название</label>
+												<input
+													className={s.input}
+													value={draft.title}
+													onChange={e =>
+														setDraft(p.id, { title: e.target.value })
+													}
 												/>
-											) : null}
+											</div>
+
+											<div>
+												<label className={s.label}>Цена</label>
+												<input
+													className={s.input}
+													value={draft.price_uah}
+													inputMode='numeric'
+													onChange={e =>
+														setDraft(p.id, { price_uah: e.target.value })
+													}
+												/>
+											</div>
+
+											<div>
+												<label className={s.label}>Категория</label>
+												<select
+													className={s.select}
+													value={draft.category_id}
+													onChange={e =>
+														setDraft(p.id, { category_id: e.target.value })
+													}
+												>
+													{cats.map(c => (
+														<option key={c.id} value={c.id}>
+															{c.name} ({c.slug})
+														</option>
+													))}
+												</select>
+											</div>
+
+											<label className={s.checkboxRow}>
+												<input
+													className={s.checkbox}
+													type='checkbox'
+													checked={draft.in_stock}
+													onChange={e =>
+														setDraft(p.id, { in_stock: e.target.checked })
+													}
+												/>
+												В наличии
+											</label>
 										</div>
-									</div>
 
-									<div style={{ display: 'grid', gap: 10 }}>
-										<input
-											type='file'
-											accept='image/*'
-											onChange={async e => {
-												const nextFile = e.target.files?.[0];
-												if (!nextFile) return;
-												await replaceImage(p.id, nextFile);
-												e.currentTarget.value = '';
-											}}
-										/>
-
-										<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-											<button
-												type='button'
-												onClick={() => removeImage(p.id)}
-												disabled={!p.image_url || savingId === p.id}
-											>
-												Удалить изображение
-											</button>
+										<div>
+											<label className={s.label}>Описание</label>
+											<textarea
+												className={s.textarea}
+												value={draft.description}
+												onChange={e =>
+													setDraft(p.id, { description: e.target.value })
+												}
+											/>
 										</div>
 
-										<div style={{ fontSize: 12, opacity: 0.7 }}>
-											image_path: {p.image_path || '—'}
+										<div>
+											<label className={s.label}>Теги</label>
+											<input
+												className={s.input}
+												value={draft.tags}
+												onChange={e => setDraft(p.id, { tags: e.target.value })}
+											/>
 										</div>
-									</div>
-								</div>
-							</div>
-						);
-					})}
-				</div>
 
-				{!items.length && !loading ? (
-					<div style={{ opacity: 0.7 }}>Пока нет товаров.</div>
-				) : null}
-			</div>
+										<div className={s.imageBlock}>
+											<div className={s.preview}>
+												{p.image_url ? (
+													<img src={p.image_url} alt={p.title} />
+												) : (
+													<div className={s.previewEmpty}>Нет изображения</div>
+												)}
+											</div>
+
+											<div className={s.grid}>
+												<div>
+													<label className={s.label}>Заменить фото</label>
+													<input
+														className={s.input}
+														type='file'
+														accept='image/*'
+														onChange={async e => {
+															const nextFile = e.target.files?.[0];
+															if (!nextFile) return;
+															await replaceImage(p.id, nextFile);
+															e.currentTarget.value = '';
+														}}
+													/>
+												</div>
+
+												<div className={s.productActions}>
+													<button
+														type='button'
+														className={s.btn}
+														onClick={() => removeImage(p.id)}
+														disabled={!p.image_url || savingId === p.id}
+													>
+														Удалить изображение
+													</button>
+												</div>
+
+												<div className={s.note}>
+													image_path: {p.image_path || '—'}
+												</div>
+											</div>
+										</div>
+									</article>
+								);
+							})
+						) : (
+							<div className={s.empty}>Пока нет товаров.</div>
+						)}
+					</div>
+
+					{ok ? <div className={s.statusOk}>✅ {ok}</div> : null}
+					{err ? <div className={s.statusErr}>❌ {err}</div> : null}
+				</section>
+			</section>
 		</div>
 	);
 }

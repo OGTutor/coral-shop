@@ -19,9 +19,7 @@ export default function SiteFooter() {
 					</div>
 					<div>
 						<div className={styles.title}>Контакт</div>
-						<div className={styles.muted}>
-							Добавь сюда Telegram/Instagram (как решишь)
-						</div>
+						<div className={styles.muted}>Telegram/Instagram</div>
 					</div>
 				</div>
 
@@ -29,7 +27,6 @@ export default function SiteFooter() {
 					<div className={styles.muted}>
 						© {new Date().getFullYear()} Coral Shop
 					</div>
-					<div className={styles.muted}>Сделано без истерики ✨</div>
 				</div>
 			</div>
 		</footer>

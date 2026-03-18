@@ -20,12 +20,6 @@
 	margin-bottom: 8px;
 }
 
-.muted {
-	color: var(--muted);
-	font-size: 14px;
-	line-height: 1.5;
-}
-
 .bottom {
 	margin-top: 22px;
 	padding-top: 18px;

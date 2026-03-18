@@ -1,0 +1,138 @@
+.page {
+	min-height: 100dvh;
+	display: grid;
+	place-items: center;
+	padding: 24px;
+	position: relative;
+	overflow: hidden;
+	background:
+		radial-gradient(
+			900px 520px at 10% -10%,
+			rgba(14, 165, 233, 0.14),
+			transparent 55%
+		),
+		radial-gradient(
+			900px 520px at 100% 0%,
+			rgba(20, 184, 166, 0.14),
+			transparent 55%
+		),
+		linear-gradient(180deg, #f8fdff 0%, #eef9fd 100%);
+}
+
+.bgOrbA,
+.bgOrbB {
+	position: absolute;
+	border-radius: 999px;
+	filter: blur(40px);
+	pointer-events: none;
+}
+
+.bgOrbA {
+	width: 260px;
+	height: 260px;
+	left: -70px;
+	top: 90px;
+	background: rgba(14, 165, 233, 0.16);
+}
+
+.bgOrbB {
+	width: 260px;
+	height: 260px;
+	right: -60px;
+	bottom: 50px;
+	background: rgba(20, 184, 166, 0.18);
+}
+
+.card {
+	position: relative;
+	z-index: 1;
+	width: min(100%, 460px);
+	padding: 28px;
+	border-radius: 28px;
+	border: 1px solid rgba(14, 116, 144, 0.16);
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(14px);
+	box-shadow:
+		0 20px 60px rgba(14, 116, 144, 0.12),
+		0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 8px 12px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 700;
+	color: #0369a1;
+	background: rgba(14, 165, 233, 0.1);
+	border: 1px solid rgba(14, 165, 233, 0.16);
+	margin-bottom: 14px;
+}
+
+.title {
+	margin: 0;
+	font-size: 34px;
+	line-height: 1.02;
+	letter-spacing: -0.04em;
+	color: #0f172a;
+}
+
+.subtitle {
+	margin: 10px 0 0;
+	color: #4b6474;
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.form {
+	display: grid;
+	gap: 16px;
+	margin-top: 24px;
+}
+
+.field {
+	display: grid;
+	gap: 8px;
+}
+
+.label {
+	font-size: 13px;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.submit {
+	width: 100%;
+	margin-top: 6px;
+	height: 48px;
+	font-size: 15px;
+	font-weight: 800;
+}
+
+.error {
+	margin-top: 2px;
+	padding: 12px 14px;
+	border-radius: 14px;
+	color: #b91c1c;
+	background: rgba(239, 68, 68, 0.08);
+	border: 1px solid rgba(239, 68, 68, 0.16);
+	font-size: 14px;
+	line-height: 1.45;
+	word-break: break-word;
+}
+
+@media (max-width: 640px) {
+	.page {
+		padding: 16px;
+	}
+
+	.card {
+		padding: 20px;
+		border-radius: 22px;
+	}
+
+	.title {
+		font-size: 28px;
+	}
+}
