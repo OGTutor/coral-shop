@@ -34,12 +34,16 @@ type ProductDraft = {
 	category_id: string;
 };
 
-function slugifyFileName(name: string) {
-	return name
-		.trim()
-		.toLowerCase()
-		.replace(/[^\p{L}\p{N}]+/gu, '-')
-		.replace(/^-+|-+$/g, '');
+function getSafeFileExt(fileName: string) {
+	const rawExt = fileName.split('.').pop()?.toLowerCase() || 'jpg';
+	const safeExt = rawExt.replace(/[^a-z0-9]/g, '');
+	return safeExt || 'jpg';
+}
+
+function buildSafeStoragePath(productId: string, file: File) {
+	const ext = getSafeFileExt(file.name);
+	const unique = `${Date.now()}-${crypto.randomUUID()}`;
+	return `${productId}/${unique}.${ext}`;
 }
 
 function buildDraft(p: Product): ProductDraft {
@@ -133,25 +137,22 @@ export default function AdminProductsClient() {
 		}));
 	}
 
-	async function uploadImage(
-		productId: string,
-		nextFile: File,
-		titleForFile: string,
-	) {
-		const ext = nextFile.name.split('.').pop() || 'jpg';
-		const safe = slugifyFileName(titleForFile || 'product');
-		const path = `${productId}/${safe}.${ext}`;
+	async function uploadImage(productId: string, nextFile: File) {
+		const path = buildSafeStoragePath(productId, nextFile);
 
 		const up = await supabase.storage
 			.from('product-images')
 			.upload(path, nextFile, {
 				upsert: true,
-				contentType: nextFile.type || 'image/jpeg',
+				contentType: nextFile.type || 'application/octet-stream',
 			});
 
-		if (up.error) throw new Error(up.error.message);
+		if (up.error) {
+			throw new Error(up.error.message);
+		}
 
 		const pub = supabase.storage.from('product-images').getPublicUrl(path);
+
 		return {
 			image_path: path,
 			image_url: pub.data.publicUrl || '',
@@ -213,7 +214,7 @@ export default function AdminProductsClient() {
 
 		try {
 			if (file) {
-				const uploaded = await uploadImage(id, file, title.trim());
+				const uploaded = await uploadImage(id, file);
 
 				const upd = await supabase
 					.from('products')
@@ -315,11 +316,7 @@ export default function AdminProductsClient() {
 				await removeImageFromStorage(product.image_path);
 			}
 
-			const uploaded = await uploadImage(
-				id,
-				newFile,
-				drafts[id]?.title || product.title,
-			);
+			const uploaded = await uploadImage(id, newFile);
 
 			const upd = await supabase.from('products').update(uploaded).eq('id', id);
 
